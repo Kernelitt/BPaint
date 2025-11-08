@@ -1,0 +1,71 @@
+#multiline
+/fill 24 16 26 16 6 91 0 0
+/fill 22 15 23 15 6 91 0 0
+/setpart 24 15 6 55 0 0
+/fill 25 15 26 15 6 71 0 0
+/fill 27 15 28 15 6 91 0 0
+/setpart 21 14 6 91 0 0
+/fill 22 14 23 14 6 71 0 0
+/fill 24 14 25 14 6 52 0 0
+/fill 26 14 27 14 6 71 0 0
+/setpart 28 14 6 73 0 0
+/setpart 29 14 6 91 0 0
+/fill 20 13 20 12 6 91 0 0
+/fill 21 13 21 8 6 71 0 0
+/setpart 22 13 6 52 0 0
+/setpart 23 13 6 120 0 0
+/setpart 24 13 6 122 0 0
+/setpart 25 13 6 53 0 0
+/fill 26 13 27 13 6 52 0 0
+/setpart 28 13 6 71 0 0
+/setpart 29 13 6 73 0 0
+/fill 30 13 30 12 6 91 0 0
+/setpart 22 12 6 120 0 0
+/setpart 23 12 6 122 0 0
+/setpart 24 12 6 16 0 0
+/setpart 25 12 6 107 0 0
+/setpart 26 12 6 16 0 0
+/setpart 27 12 6 71 0 0
+/setpart 28 12 6 122 0 0
+/setpart 29 12 6 55 0 0
+/fill 19 11 19 9 6 91 0 0
+/setpart 20 11 6 73 0 0
+/setpart 22 11 6 122 0 0
+/fill 23 11 23 9 6 16 0 0
+/fill 24 11 24 10 6 107 0 0
+/fill 25 11 25 9 6 108 0 0
+/fill 26 11 26 9 6 107 0 0
+/fill 27 11 27 9 6 16 0 0
+/fill 28 11 28 9 6 52 0 0
+/fill 29 11 29 10 6 71 0 0
+/fill 30 11 30 9 6 73 0 0
+/fill 31 11 31 9 6 91 0 0
+/fill 20 10 20 9 6 55 0 0
+/fill 22 10 22 8 6 52 0 0
+/setpart 24 9 6 108 0 0
+/setpart 29 9 6 52 0 0
+/fill 20 8 20 7 6 91 0 0
+/setpart 23 8 6 71 0 0
+/setpart 24 8 6 16 0 0
+/setpart 25 8 6 107 0 0
+/setpart 26 8 6 16 0 0
+/fill 27 8 28 8 6 71 0 0
+/setpart 29 8 6 73 0 0
+/fill 30 8 30 7 6 91 0 0
+/setpart 21 7 6 73 0 0
+/setpart 22 7 6 121 0 0
+/fill 23 7 25 7 6 52 0 0
+/fill 26 7 27 7 6 71 0 0
+/setpart 28 7 6 122 0 0
+/setpart 29 7 6 55 0 0
+/setpart 21 6 6 91 0 0
+/fill 22 6 23 6 6 73 0 0
+/fill 24 6 26 6 6 71 0 0
+/fill 27 6 28 6 6 73 0 0
+/setpart 29 6 6 91 0 0
+/fill 22 5 23 5 6 91 0 0
+/setpart 24 5 6 55 0 0
+/setpart 25 5 6 73 0 0
+/setpart 26 5 6 55 0 0
+/fill 27 5 28 5 6 91 0 0
+/fill 24 4 26 4 6 91 0 0

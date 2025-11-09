@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog
 from colors import colors
+from PIL import Image
+import math
 
 # Base colors with hex
 base_colors = {
@@ -88,6 +90,30 @@ for base_name, hex_val in base_colors.items():
 # Add grayscale colors without dark variants
 for gray_name, hex_val in grayscale_colors.items():
     tkinter_colors[gray_name] = hex_val
+
+def hex_to_rgb(hex_color):
+    """Convert hex color to RGB tuple"""
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def find_closest_color(pixel_rgb):
+    """Find the closest color in the palette to the given RGB pixel"""
+    min_distance = float('inf')
+    closest_color = None
+
+    for color_name, hex_val in tkinter_colors.items():
+        palette_rgb = hex_to_rgb(hex_val)
+        # Calculate Euclidean distance in RGB space
+        distance = math.sqrt(
+            (pixel_rgb[0] - palette_rgb[0]) ** 2 +
+            (pixel_rgb[1] - palette_rgb[1]) ** 2 +
+            (pixel_rgb[2] - palette_rgb[2]) ** 2
+        )
+        if distance < min_distance:
+            min_distance = distance
+            closest_color = color_name
+
+    return closest_color
 
 # Fixed canvas size
 CANVAS_WIDTH = 1000
@@ -728,8 +754,54 @@ def copy_to_clipboard():
     root.clipboard_append(output)
     print("Commands copied to clipboard")
 
+def import_png():
+    """Import a PNG image and convert it to the grid"""
+    file_path = filedialog.askopenfilename(
+        title="Import PNG",
+        filetypes=[("PNG files", "*.png"), ("All files", "*.*")]
+    )
+    if not file_path:
+        return
+
+    try:
+        # Load the image
+        image = Image.open(file_path)
+
+        # Validate image size (max 256x256)
+        if image.width > 256 or image.height > 256:
+            print("Image is too large. Maximum size is 256x256 pixels.")
+            return
+
+        # Resize image to fit current grid_size
+        resized_image = image.resize((grid_size, grid_size), Image.Resampling.LANCZOS)
+
+        # Convert to RGB if necessary
+        if resized_image.mode == 'RGBA':
+            # Handle alpha transparency - composite on white background
+            background = Image.new('RGB', resized_image.size, (255, 255, 255))
+            background.paste(resized_image, mask=resized_image.split()[-1])
+            resized_image = background
+        elif resized_image.mode != 'RGB':
+            resized_image = resized_image.convert('RGB')
+
+        # Process each pixel and update grid
+        for y in range(grid_size):
+            for x in range(grid_size):
+                pixel_rgb = resized_image.getpixel((x, y))
+                closest_color = find_closest_color(pixel_rgb)
+                grid[y][x] = closest_color
+
+        # Redraw canvas
+        redraw_canvas()
+
+        print(f"Successfully imported PNG: {file_path}")
+
+    except Exception as e:
+        print(f"Error importing PNG: {e}")
+
 file_menu.add_command(label="Save Drawing", command=save_drawing)
 file_menu.add_command(label="Copy to Clipboard", command=copy_to_clipboard)
+file_menu.add_command(label="Import PNG", command=import_png)
 
 # Zoom and pan controls
 zoom_pan_frame = tk.Frame(controls_frame)

@@ -599,7 +599,6 @@ menu_bar.add_cascade(label="File", menu=file_menu)
 
 def save_drawing():
     commands = []
-    commands.append('#multiline')
 
     # Find rectangular areas for /fill commands
     processed = [[False for _ in range(grid_size)] for _ in range(grid_size)]
@@ -669,7 +668,15 @@ def save_drawing():
                     command = f"/setpart {out_x1} {out_y1} {PART_TYPE} {skin} {DEFAULT_GRID_ROTATION} {DEFAULT_FLIP_VALUE}"
                 commands.append(command)
 
-    output = "\n".join(commands)
+    # Split commands into batches of 500
+    batch_size = 500
+    batches = []
+    for i in range(0, len(commands), batch_size):
+        batch = commands[i:i + batch_size]
+        batch.insert(0, '#multiline')
+        batches.append("\n".join(batch))
+
+    output = "\n\n".join(batches)
 
     # Save commands to file with grid size and offset in filename
     file_path = filedialog.asksaveasfilename(defaultextension=".txt", title="Save Drawing", initialfile=f"drawing.txt")
@@ -681,7 +688,6 @@ def save_drawing():
 
 def copy_to_clipboard():
     commands = []
-    commands.append('#multiline')
 
     processed = [[False for _ in range(grid_size)] for _ in range(grid_size)]
 
@@ -749,10 +755,97 @@ def copy_to_clipboard():
                     command = f"/setpart {out_x1} {out_y1} {PART_TYPE} {skin} {DEFAULT_GRID_ROTATION} {DEFAULT_FLIP_VALUE}"
                 commands.append(command)
 
-    output = "\n".join(commands)
+    # Split commands into batches of 500
+    batch_size = 500
+    batches = []
+    for i in range(0, len(commands), batch_size):
+        batch = commands[i:i + batch_size]
+        batch.insert(0, '#multiline')
+        batches.append("\n".join(batch))
+
+    output = "\n\n".join(batches)
     root.clipboard_clear()
     root.clipboard_append(output)
-    print("Commands copied to clipboard")
+    print("Commands copied to clipboard in batches of 500")
+
+def save_map():
+    """Save the drawing in map format (comma-separated values without command names)"""
+    lines = []
+
+    processed = [[False for _ in range(grid_size)] for _ in range(grid_size)]
+
+    for y in range(grid_size):
+        for x in range(grid_size):
+            if grid[y][x] and not processed[y][x]:
+                color_name = grid[y][x]
+                skin = None
+
+                if color_name.startswith("DeepDark"):
+                    base_name = color_name[8:]
+                    base_skin = colors.get(base_name)
+                    if base_skin is not None:
+                        skin = base_skin + 72
+                elif color_name.startswith("Dark"):
+                    base_name = color_name[4:]
+                    base_skin = colors.get(base_name)
+                    if base_skin is not None:
+                        skin = base_skin + 36
+                else:
+                    skin = colors.get(color_name)
+                    if skin is None:
+                        from colors import colors_from_white_to_black
+                        skin = colors_from_white_to_black.get(color_name, DEFAULT_SKIN)
+
+                max_width = 1
+                max_height = 1
+
+                for w in range(1, grid_size - x + 1):
+                    if x + w > grid_size:
+                        break
+                    can_extend = True
+                    for yy in range(y, min(y + max_height, grid_size)):
+                        if yy >= grid_size or grid[yy][x + w - 1] != color_name or processed[yy][x + w - 1]:
+                            can_extend = False
+                            break
+                    if not can_extend:
+                        break
+                    max_width = w
+
+                for h in range(1, grid_size - y + 1):
+                    if y + h > grid_size:
+                        break
+                    can_extend = True
+                    for xx in range(x, min(x + max_width, grid_size)):
+                        if xx >= grid_size or grid[y + h - 1][xx] != color_name or processed[y + h - 1][xx]:
+                            can_extend = False
+                            break
+                    if not can_extend:
+                        break
+                    max_height = h
+
+                for yy in range(y, y + max_height):
+                    for xx in range(x, x + max_width):
+                        processed[yy][xx] = True
+
+                out_x1 = x + offset_x
+                out_y1 = -(y + offset_y)
+                out_x2 = (x + max_width - 1) + offset_x
+                out_y2 = -((y + max_height - 1) + offset_y)
+
+                if max_width > 1 or max_height > 1:
+                    line = f"{out_x1},{out_y1},{out_x2},{out_y2},{PART_TYPE},{skin},{DEFAULT_GRID_ROTATION},{DEFAULT_FLIP_VALUE}"
+                else:
+                    line = f"{out_x1},{out_y1},{PART_TYPE},{skin},{DEFAULT_GRID_ROTATION},{DEFAULT_FLIP_VALUE}"
+                lines.append(line)
+
+    output = "\n".join(lines)
+
+    # Save to file
+    file_path = filedialog.asksaveasfilename(defaultextension=".txt", title="Save Map", initialfile="map.txt")
+    if file_path:
+        with open(file_path, "w") as f:
+            f.write(output)
+        print(f"Map saved to {file_path}")
 
 def import_png():
     """Import a PNG image and convert it to the grid"""
@@ -800,6 +893,7 @@ def import_png():
         print(f"Error importing PNG: {e}")
 
 file_menu.add_command(label="Save Drawing", command=save_drawing)
+file_menu.add_command(label="Save Map", command=save_map)
 file_menu.add_command(label="Copy to Clipboard", command=copy_to_clipboard)
 file_menu.add_command(label="Import PNG", command=import_png)
 

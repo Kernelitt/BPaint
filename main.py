@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 from colors import colors
 from PIL import Image
-import math
+import math,os
 
 # Base colors with hex
 base_colors = {
@@ -796,52 +796,18 @@ def save_map():
                         from colors import colors_from_white_to_black
                         skin = colors_from_white_to_black.get(color_name, DEFAULT_SKIN)
 
-                max_width = 1
-                max_height = 1
-
-                for w in range(1, grid_size - x + 1):
-                    if x + w > grid_size:
-                        break
-                    can_extend = True
-                    for yy in range(y, min(y + max_height, grid_size)):
-                        if yy >= grid_size or grid[yy][x + w - 1] != color_name or processed[yy][x + w - 1]:
-                            can_extend = False
-                            break
-                    if not can_extend:
-                        break
-                    max_width = w
-
-                for h in range(1, grid_size - y + 1):
-                    if y + h > grid_size:
-                        break
-                    can_extend = True
-                    for xx in range(x, min(x + max_width, grid_size)):
-                        if xx >= grid_size or grid[y + h - 1][xx] != color_name or processed[y + h - 1][xx]:
-                            can_extend = False
-                            break
-                    if not can_extend:
-                        break
-                    max_height = h
-
-                for yy in range(y, y + max_height):
-                    for xx in range(x, x + max_width):
-                        processed[yy][xx] = True
 
                 out_x1 = x + offset_x
                 out_y1 = -(y + offset_y)
-                out_x2 = (x + max_width - 1) + offset_x
-                out_y2 = -((y + max_height - 1) + offset_y)
 
-                if max_width > 1 or max_height > 1:
-                    line = f"{out_x1},{out_y1},{out_x2},{out_y2},{PART_TYPE},{skin},{DEFAULT_GRID_ROTATION},{DEFAULT_FLIP_VALUE}"
-                else:
-                    line = f"{out_x1},{out_y1},{PART_TYPE},{skin},{DEFAULT_GRID_ROTATION},{DEFAULT_FLIP_VALUE}"
+
+                line = f"{PART_TYPE},{skin},{out_x1},{out_y1},{DEFAULT_GRID_ROTATION},{DEFAULT_FLIP_VALUE},0,0"
                 lines.append(line)
 
     output = "\n".join(lines)
 
     # Save to file
-    file_path = filedialog.asksaveasfilename(defaultextension=".txt", title="Save Map", initialfile="map.txt")
+    file_path = filedialog.asksaveasfilename(defaultextension="", title="Save Map", initialfile="map",initialdir=os.path.join(os.environ['APPDATA'], '..', 'LocalLow', '_Imaginary_', 'Bad Piggies__Rebooted', 'contraptionsB'))
     if file_path:
         with open(file_path, "w") as f:
             f.write(output)

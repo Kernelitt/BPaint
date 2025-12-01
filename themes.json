@@ -1,0 +1,79 @@
+{
+    "Dark": {
+        "fg": "#FFFFFF",
+        "bg": "#000000",
+        "canvas_bg": "#000000",
+        "grid_color": "#777777",
+        "erased_color": "#999999"
+    },
+    "Light": {
+        "fg": "#000000",
+        "bg": "#FAFAFA",
+        "canvas_bg": "#000000",
+        "grid_color": "#DDDDDD",
+        "erased_color": "#F0F0F0"
+    },
+    "Solarized Dark": {
+        "fg": "#93A1A1",
+        "bg": "#002B36",
+        "canvas_bg": "#002B36",
+        "grid_color": "#586E75",
+        "erased_color": "#073642"
+    },
+    "Solarized Light": {
+        "fg": "#586E75",
+        "bg": "#FDF6E3",
+        "canvas_bg": "#FDF6E3",
+        "grid_color": "#93A1A1",
+        "erased_color": "#EEE8D5"
+    },
+    "Dracula": {
+        "fg": "#F8F8F2",
+        "bg": "#282A36",
+        "canvas_bg": "#282A36",
+        "grid_color": "#6272A4",
+        "erased_color": "#44475A"
+    },
+    "Monokai": {
+        "fg": "#F8F8F2",
+        "bg": "#272822",
+        "canvas_bg": "#272822",
+        "grid_color": "#75715E",
+        "erased_color": "#49483E"
+    },
+    "Nord": {
+        "fg": "#D8DEE9",
+        "bg": "#2E3440",
+        "canvas_bg": "#2E3440",
+        "grid_color": "#4C566A",
+        "erased_color": "#3B4252"
+    },
+    "Gruvbox Dark": {
+        "fg": "#EBDBB2",
+        "bg": "#282828",
+        "canvas_bg": "#282828",
+        "grid_color": "#504945",
+        "erased_color": "#3C3836"
+    },
+    "Gruvbox Light": {
+        "fg": "#3C3836",
+        "bg": "#FBF1C7",
+        "canvas_bg": "#FBF1C7",
+        "grid_color": "#EBDBB2",
+        "erased_color": "#F9F5D7"
+    },
+    "Tokyo Night": {
+        "fg": "#A9B1D6",
+        "bg": "#1A1B26",
+        "canvas_bg": "#1A1B26",
+        "grid_color": "#565F89",
+        "erased_color": "#24283B"
+    },
+    "One Dark": {
+        "fg": "#ABB2BF",
+        "bg": "#282C34",
+        "canvas_bg": "#282C34",
+        "grid_color": "#5C6370",
+        "erased_color": "#3E4451"
+    }
+}

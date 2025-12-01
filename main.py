@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 from colors import colors
 from PIL import Image
-import math,os
+import math,os,json
 
 # Base colors with hex
 base_colors = {
@@ -152,6 +152,106 @@ max_zoom = 5.0
 view_x = 0  # Horizontal pan offset
 view_y = 0  # Vertical pan offset
 
+# Current theme
+current_theme = "Dark"
+
+# Style variables
+ui_bg = "#F0F0F0"
+ui_fg = "#000000"
+canvas_bg = "black"
+grid_color = "#CCCCCC"
+erased_color = "#DAD8D8"
+
+
+
+# Themes
+default_themes = {
+    "Dark": {"fg":"#FFFFFF","bg":"#000000","canvas_bg": "#000000", "grid_color": "#535353", "erased_color": "#555555"},
+    "Light": {"fg":"#000000","bg":"#FAFAFA","canvas_bg": "#000000", "grid_color": "#DDDDDD", "erased_color": "#F0F0F0"}
+}
+
+def load_themes_from_file(file_path="themes.json"):
+    """
+    Загружает темы из JSON-файла. Если файл не найден или повреждён, возвращает дефолтные темы.
+    """
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                themes = json.load(f)
+                # Проверка на корректность структуры (опционально, для безопасности)
+                if isinstance(themes, dict) and all(isinstance(v, dict) for v in themes.values()):
+                    return themes
+                else:
+                    print(f"Ошибка: файл {file_path} имеет некорректную структуру. Используются дефолтные темы.")
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"Ошибка загрузки файла {file_path}: {e}. Используются дефолтные темы.")
+    else:
+        print(f"Файл {file_path} не найден. Используются дефолтные темы.")
+    return default_themes
+
+# Загрузка тем
+themes = load_themes_from_file()
+print(themes)
+
+def load_config():
+    """Load configuration from config.json"""
+    config_file = "config.json"
+    if os.path.exists(config_file):
+        try:
+            with open(config_file, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                return config
+        except (json.JSONDecodeError, IOError):
+            pass
+    return {}
+
+def save_config(config):
+    """Save configuration to config.json"""
+    config_file = "config.json"
+    try:
+        with open(config_file, 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=4)
+    except IOError:
+        pass
+
+# Load current theme from config
+config = load_config()
+current_theme = config.get('theme', 'Dark')
+if current_theme not in themes:
+    current_theme = 'Dark'
+def apply_theme():
+    global ui_bg, ui_fg, canvas_bg, grid_color, erased_color
+    theme = themes[current_theme]
+    ui_bg = theme["bg"]
+    ui_fg = theme["fg"]
+    canvas_bg = theme["canvas_bg"]
+    grid_color = theme["grid_color"]
+    erased_color = theme["erased_color"]
+
+    # Update canvas
+    canvas.config(bg=canvas_bg)
+
+    # Update controls frame and all its children
+    def update_widget_colors(widget):
+        if isinstance(widget, tk.Frame):
+            widget.config(bg=ui_bg)
+        elif isinstance(widget, tk.Label):
+            widget.config(bg=ui_bg, fg=ui_fg)
+        elif isinstance(widget, tk.Button):
+            if widget not in color_buttons:
+                widget.config(bg=ui_bg, fg=ui_fg)
+        elif isinstance(widget, tk.Entry):
+            widget.config(bg=ui_bg, fg=ui_fg)
+        # Recurse for children
+        for child in widget.winfo_children():
+            update_widget_colors(child)
+
+    update_widget_colors(controls_frame)
+    update_widget_colors(main_frame)
+
+    # Redraw canvas
+    redraw_canvas()
+
 def init_grid(size):
     global grid, cell_size
     grid = [[None for _ in range(size)] for _ in range(size)]
@@ -163,10 +263,10 @@ def draw_grid_lines():
     for i in range(grid_size + 1):
         # Vertical lines
         x = i * cell_size
-        canvas.create_line(x, 0, x, CANVAS_HEIGHT, fill="#CCCCCC", width=1, tags="grid_line")
+        canvas.create_line(x, 0, x, CANVAS_HEIGHT, fill=grid_color, width=1, tags="grid_line")
         # Horizontal lines
         y = i * cell_size
-        canvas.create_line(0, y, CANVAS_WIDTH, y, fill="#CCCCCC", width=1, tags="grid_line")
+        canvas.create_line(0, y, CANVAS_WIDTH, y, fill=grid_color, width=1, tags="grid_line")
 
 def draw_pixel(event):
     global rect_start
@@ -191,13 +291,13 @@ def draw_pixel(event):
                 grid[grid_y][grid_x] = None
                 screen_x = int(grid_x * scaled_cell_size - view_x)
                 screen_y = int(grid_y * scaled_cell_size - view_y)
-                canvas.create_rectangle(screen_x, screen_y, screen_x + scaled_cell_size, screen_y + scaled_cell_size, fill="#DAD8D8", outline="#CCCCCC")
+                canvas.create_rectangle(screen_x, screen_y, screen_x + scaled_cell_size, screen_y + scaled_cell_size, fill=erased_color, outline=grid_color)
         elif drawing_tool == "rectangle":
             if event.state & 0x400:  # Right button pressed (Button3) - erase mode
                 grid[grid_y][grid_x] = None
                 screen_x = int(grid_x * scaled_cell_size - view_x)
                 screen_y = int(grid_y * scaled_cell_size - view_y)
-                canvas.create_rectangle(screen_x, screen_y, screen_x + scaled_cell_size, screen_y + scaled_cell_size, fill="#DAD8D8", outline="")
+                canvas.create_rectangle(screen_x, screen_y, screen_x + scaled_cell_size, screen_y + scaled_cell_size, fill=erased_color, outline="")
 
 def flood_fill(x, y, target_color, replacement_color):
     """Flood fill algorithm to fill connected areas of the same color"""
@@ -219,7 +319,7 @@ def flood_fill(x, y, target_color, replacement_color):
         # Draw the cell
         if replacement_color is None:
             # Erase - draw background color
-            canvas.create_rectangle(cx * cell_size, cy * cell_size, (cx + 1) * cell_size, (cy + 1) * cell_size, fill="#DAD8D8", outline="#CCCCCC")
+            canvas.create_rectangle(cx * cell_size, cy * cell_size, (cx + 1) * cell_size, (cy + 1) * cell_size, fill=erased_color, outline=grid_color)
         else:
             # Fill with color
             tk_color = tkinter_colors.get(replacement_color, "black")
@@ -248,7 +348,7 @@ def on_canvas_click(event):
                 grid[grid_y][grid_x] = None
                 screen_x = int(grid_x * scaled_cell_size - view_x)
                 screen_y = int(grid_y * scaled_cell_size - view_y)
-                canvas.create_rectangle(screen_x, screen_y, screen_x + scaled_cell_size, screen_y + scaled_cell_size, fill="#DAD8D8", outline="#CCCCCC")
+                canvas.create_rectangle(screen_x, screen_y, screen_x + scaled_cell_size, screen_y + scaled_cell_size, fill=erased_color, outline=grid_color)
             else:
                 # Left click - rectangle drawing
                 if rect_start is None:
@@ -471,7 +571,7 @@ def redraw_canvas():
                 canvas.create_rectangle(
                     screen_x, screen_y,
                     screen_x + scaled_cell_size, screen_y + scaled_cell_size,
-                    fill="#DAD8D8", outline="#CCCCCC"
+                    fill=erased_color, outline=grid_color
                 )
 
     # Draw grid lines
@@ -480,11 +580,11 @@ def redraw_canvas():
         # Vertical lines
         x = int(i * scaled_cell_size - view_x)
         if 0 <= x <= CANVAS_WIDTH:
-            canvas.create_line(x, 0, x, CANVAS_HEIGHT, fill="#CCCCCC", width=1, tags="grid_line")
+            canvas.create_line(x, 0, x, CANVAS_HEIGHT, fill=grid_color, width=1, tags="grid_line")
         # Horizontal lines
         y = int(i * scaled_cell_size - view_y)
         if 0 <= y <= CANVAS_HEIGHT:
-            canvas.create_line(0, y, CANVAS_WIDTH, y, fill="#CCCCCC", width=1, tags="grid_line")
+            canvas.create_line(0, y, CANVAS_WIDTH, y, fill=grid_color, width=1, tags="grid_line")
 
     # Draw outer border
     canvas.create_rectangle(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT, outline="black", width=2, tags="grid_line")
@@ -521,6 +621,7 @@ def redraw_canvas():
 root = tk.Tk()
 root.title("BPPaint")
 
+theme_var = tk.StringVar(value=current_theme)
 # Main frame
 main_frame = tk.Frame(root)
 main_frame.grid(row=0, column=0)
@@ -533,19 +634,18 @@ controls_frame.grid(row=0, column=0, padx=10, pady=10)
 color_frame = tk.Frame(controls_frame)
 color_frame.grid(row=0, column=0, pady=10)
 
-# Grayscale colors from white to black
-grayscale_colors = ["White", "Mercury", "Silver", "Silver_Chalice", "Dusty_Gray", "Suva_Gray", "Dove_Gray", "Emperor", "Mine_Shaft", "Black"]
-
 # Separate colors into normal, dark, very dark, and grayscale
 normal_colors = [c for c in tkinter_colors if not c.startswith("Dark") and not c.startswith("Deep") and c not in grayscale_colors]
 dark_colors = [c for c in tkinter_colors if c.startswith("Dark") and not c.startswith("Deep")]
 very_dark_colors = [c for c in tkinter_colors if c.startswith("Deep")]
-grayscale = [c for c in tkinter_colors if c in grayscale_colors]
-
+grayscale = list(grayscale_colors.keys())
+color_buttons = []
 def add_color_buttons(color_list, row):
     for col, color_name in enumerate(color_list):
         btn = tk.Button(color_frame, text="", command=lambda c=color_name: select_color(c),activebackground=tkinter_colors.get(color_name, "white"), bg=tkinter_colors.get(color_name, "white"))
         btn.grid(row=row, column=col, padx=2, pady=2)
+        color_buttons.append(btn)
+
 
 add_color_buttons(normal_colors, 0)
 add_color_buttons(dark_colors, 1)
@@ -626,36 +726,10 @@ def save_drawing():
                         from colors import colors_from_white_to_black
                         skin = colors_from_white_to_black.get(color_name, DEFAULT_SKIN)
 
+                processed[y][x] = True
+
                 max_width = 1
                 max_height = 1
-
-                for w in range(1, grid_size - x + 1):
-                    if x + w > grid_size:
-                        break
-                    can_extend = True
-                    for yy in range(y, min(y + max_height, grid_size)):
-                        if yy >= grid_size or grid[yy][x + w - 1] != color_name or processed[yy][x + w - 1]:
-                            can_extend = False
-                            break
-                    if not can_extend:
-                        break
-                    max_width = w
-
-                for h in range(1, grid_size - y + 1):
-                    if y + h > grid_size:
-                        break
-                    can_extend = True
-                    for xx in range(x, min(x + max_width, grid_size)):
-                        if xx >= grid_size or grid[y + h - 1][xx] != color_name or processed[y + h - 1][xx]:
-                            can_extend = False
-                            break
-                    if not can_extend:
-                        break
-                    max_height = h
-
-                for yy in range(y, y + max_height):
-                    for xx in range(x, x + max_width):
-                        processed[yy][xx] = True
 
                 out_x1 = x + offset_x
                 out_y1 = -(y + offset_y)
@@ -834,21 +908,20 @@ def import_png():
         # Resize image to fit current grid_size
         resized_image = image.resize((grid_size, grid_size), Image.Resampling.LANCZOS)
 
-        # Convert to RGB if necessary
-        if resized_image.mode == 'RGBA':
-            # Handle alpha transparency - composite on white background
-            background = Image.new('RGB', resized_image.size, (255, 255, 255))
-            background.paste(resized_image, mask=resized_image.split()[-1])
-            resized_image = background
-        elif resized_image.mode != 'RGB':
-            resized_image = resized_image.convert('RGB')
-
         # Process each pixel and update grid
         for y in range(grid_size):
             for x in range(grid_size):
-                pixel_rgb = resized_image.getpixel((x, y))
-                closest_color = find_closest_color(pixel_rgb)
-                grid[y][x] = closest_color
+                pixel = resized_image.getpixel((x, y))
+                if len(pixel) == 4:  # RGBA
+                    r, g, b, a = pixel
+                    if a == 0:
+                        grid[y][x] = None
+                    else:
+                        closest_color = find_closest_color((r, g, b))
+                        grid[y][x] = closest_color
+                else:  # RGB or other
+                    closest_color = find_closest_color(pixel)
+                    grid[y][x] = closest_color
 
         # Redraw canvas
         redraw_canvas()
@@ -862,6 +935,55 @@ file_menu.add_command(label="Save Drawing", command=save_drawing)
 file_menu.add_command(label="Save Map", command=save_map)
 file_menu.add_command(label="Copy to Clipboard", command=copy_to_clipboard)
 file_menu.add_command(label="Import PNG", command=import_png)
+
+def open_style_settings():
+    """Open a settings window for style configuration"""
+    settings_window = tk.Toplevel(root)
+    settings_window.title("Style Settings")
+    settings_window.geometry("400x400")
+    settings_window.resizable(False, False)
+
+    # Theme selection
+    theme_frame = tk.Frame(settings_window)
+    theme_frame.pack(pady=20)
+
+    tk.Label(theme_frame, text="Theme:").grid(row=0, column=0, sticky="w")
+
+    for i, theme_name in enumerate(themes.keys()):
+        radio = tk.Radiobutton(
+            theme_frame,
+            text=theme_name,  # Текст — название темы
+            variable=theme_var,  # Переменная для группы радиокнопок
+            value=theme_name,  # Значение при выборе
+            # command=apply_theme  # Можно добавить, но trace уже обрабатывает
+        )
+        radio.grid(row=i, column=0, sticky="w")  # Размещаем в разных строках
+
+
+    def apply_theme_settings():
+        global current_theme
+        selected_theme = theme_var.get()
+        current_theme = selected_theme
+        apply_theme()
+        # Save theme to config
+        config['theme'] = current_theme
+        save_config(config)
+        settings_window.destroy()
+
+    # OK and Cancel buttons
+    button_frame = tk.Frame(settings_window)
+    button_frame.pack(pady=20)
+
+    ok_btn = tk.Button(button_frame, text="OK", command=apply_theme_settings)
+    ok_btn.grid(row=0, column=0, padx=10)
+
+    cancel_btn = tk.Button(button_frame, text="Cancel", command=settings_window.destroy)
+    cancel_btn.grid(row=0, column=1, padx=10)
+
+# Add settings menu
+settings_menu = tk.Menu(menu_bar, tearoff=0)
+menu_bar.add_cascade(label="Settings", menu=settings_menu)
+settings_menu.add_command(label="Style", command=open_style_settings)
 
 # Zoom and pan controls
 zoom_pan_frame = tk.Frame(controls_frame)
@@ -892,7 +1014,7 @@ pan_down_btn = tk.Button(zoom_pan_frame, text="↓", command=lambda: pan_canvas(
 pan_down_btn.grid(row=4, column=1, pady=2)
 
 # Canvas on right
-canvas = tk.Canvas(main_frame, width=CANVAS_WIDTH, height=CANVAS_HEIGHT, bg="black")
+canvas = tk.Canvas(main_frame, width=CANVAS_WIDTH, height=CANVAS_HEIGHT, bg=canvas_bg)
 canvas.grid(row=0, column=1)
 canvas.bind("<B1-Motion>", draw_pixel)
 canvas.bind("<B3-Motion>", draw_pixel)
@@ -913,5 +1035,8 @@ root.bind("<Escape>", cancel_rectangle)
 # Initialize grid after canvas is created
 init_grid(grid_size)
 redraw_canvas()
+
+# Apply theme on startup
+apply_theme()
 
 root.mainloop()

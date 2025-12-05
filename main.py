@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
-from colors import colors
+from colors import colors_id
 from PIL import Image
 import math,os,json
 
@@ -242,6 +242,7 @@ def apply_theme():
                 widget.config(bg=ui_bg, fg=ui_fg)
         elif isinstance(widget, tk.Entry):
             widget.config(bg=ui_bg, fg=ui_fg)
+        root.configure(bg=ui_bg)
         # Recurse for children
         for child in widget.winfo_children():
             update_widget_colors(child)
@@ -405,7 +406,7 @@ def add_tool_buttons():
 
 
 def update_status_display():
-    status_text = f"Selected Tool: {drawing_tool.capitalize()} | Selected Color: {selected_color if selected_color else 'None'}"
+    status_text = f"Selected Tool: {drawing_tool.capitalize()}  Selected Color: {selected_color if selected_color else 'None'}"
     status_label.config(text=status_text)
 
 def export_commands():
@@ -425,18 +426,18 @@ def export_commands():
                 if color_name.startswith("DeepDark"):
                     # Very dark variant: base color ID + 72
                     base_name = color_name[8:]  # Remove "DeepDark" prefix
-                    base_skin = colors.get(base_name)
+                    base_skin = colors_id.get(base_name)
                     if base_skin is not None:
                         skin = base_skin + 72
                 elif color_name.startswith("Dark"):
                     # Dark variant: base color ID + 36
                     base_name = color_name[4:]  # Remove "Dark" prefix
-                    base_skin = colors.get(base_name)
+                    base_skin = colors_id.get(base_name)
                     if base_skin is not None:
                         skin = base_skin + 36
                 else:
                     # Regular color or grayscale
-                    skin = colors.get(color_name)
+                    skin = colors_id.get(color_name)
                     if skin is None:
                         from colors import colors_from_white_to_black
                         skin = colors_from_white_to_black.get(color_name, DEFAULT_SKIN)
@@ -712,16 +713,16 @@ def save_drawing():
                 # Handle dark and very dark color variants
                 if color_name.startswith("DeepDark"):
                     base_name = color_name[8:]
-                    base_skin = colors.get(base_name)
+                    base_skin = colors_id.get(base_name)
                     if base_skin is not None:
                         skin = base_skin + 72
                 elif color_name.startswith("Dark"):
                     base_name = color_name[4:]
-                    base_skin = colors.get(base_name)
+                    base_skin = colors_id.get(base_name)
                     if base_skin is not None:
                         skin = base_skin + 36
                 else:
-                    skin = colors.get(color_name)
+                    skin = colors_id.get(color_name)
                     if skin is None:
                         from colors import colors_from_white_to_black
                         skin = colors_from_white_to_black.get(color_name, DEFAULT_SKIN)
@@ -773,16 +774,16 @@ def copy_to_clipboard():
 
                 if color_name.startswith("DeepDark"):
                     base_name = color_name[8:]
-                    base_skin = colors.get(base_name)
+                    base_skin = colors_id.get(base_name)
                     if base_skin is not None:
                         skin = base_skin + 72
                 elif color_name.startswith("Dark"):
                     base_name = color_name[4:]
-                    base_skin = colors.get(base_name)
+                    base_skin = colors_id.get(base_name)
                     if base_skin is not None:
                         skin = base_skin + 36
                 else:
-                    skin = colors.get(color_name)
+                    skin = colors_id.get(color_name)
                     if skin is None:
                         from colors import colors_from_white_to_black
                         skin = colors_from_white_to_black.get(color_name, DEFAULT_SKIN)
@@ -856,16 +857,16 @@ def save_map():
 
                 if color_name.startswith("DeepDark"):
                     base_name = color_name[8:]
-                    base_skin = colors.get(base_name)
+                    base_skin = colors_id.get(base_name)
                     if base_skin is not None:
                         skin = base_skin + 72
                 elif color_name.startswith("Dark"):
                     base_name = color_name[4:]
-                    base_skin = colors.get(base_name)
+                    base_skin = colors_id.get(base_name)
                     if base_skin is not None:
                         skin = base_skin + 36
                 else:
-                    skin = colors.get(color_name)
+                    skin = colors_id.get(color_name)
                     if skin is None:
                         from colors import colors_from_white_to_black
                         skin = colors_from_white_to_black.get(color_name, DEFAULT_SKIN)
@@ -952,12 +953,11 @@ def open_style_settings():
     for i, theme_name in enumerate(themes.keys()):
         radio = tk.Radiobutton(
             theme_frame,
-            text=theme_name,  # Текст — название темы
-            variable=theme_var,  # Переменная для группы радиокнопок
-            value=theme_name,  # Значение при выборе
-            # command=apply_theme  # Можно добавить, но trace уже обрабатывает
+            text=theme_name, 
+            variable=theme_var, 
+            value=theme_name, 
         )
-        radio.grid(row=i, column=0, sticky="w")  # Размещаем в разных строках
+        radio.grid(row=i, column=0, sticky="w")  
 
 
     def apply_theme_settings():

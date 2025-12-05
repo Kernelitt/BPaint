@@ -1,4 +1,4 @@
-colors = {
+colors_id = {
     "Cinnabar":12,
     "Burnt_Sienna":13,
     "Anzac":14,

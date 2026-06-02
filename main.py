@@ -899,27 +899,37 @@ def import_png():
 
     try:
         # Load the image
-        image = Image.open(file_path)
+        image = Image.open(file_path).convert("RGBA")
 
-        # Validate image size (max 256x256)
-        if image.width > 256 or image.height > 256:
-            print("Image is too large. Maximum size is 256x256 pixels.")
-            return
+        # Resize image to fit current grid_size, also attempt to preserve aspect ratio
+        img_w, img_h = image.size
 
-        # Resize image to fit current grid_size
-        resized_image = image.resize((grid_size, grid_size), Image.Resampling.LANCZOS)
+        scale = min(grid_size / img_w, grid_size / img_h)
 
-        # Process each pixel and update grid
+        new_w = max(1, int(img_w * scale))
+        new_h = max(1, int(img_h * scale))
+
+        resized_image = image.resize((new_w, new_h), Image.Resampling.LANCZOS)
+
+        # Clear grid
         for y in range(grid_size):
             for x in range(grid_size):
-                pixel = resized_image.getpixel((x, y))
-                if len(pixel) == 4:  # RGBA
-                    r, g, b, a = pixel
-                    if a == 0:
-                        grid[y][x] = None
-                    else:
-                        closest_color = find_closest_color((r, g, b))
-                        grid[y][x] = closest_color
+                grid[y][x] = None
+
+        # Center image
+        offset_x = (grid_size - new_w) // 2
+        offset_y = (grid_size - new_h) // 2
+
+        # Import pixels
+        for y in range(new_h):
+            for x in range(new_w):
+                r, g, b, a = resized_image.getpixel((x, y))
+
+                if a >= 128:
+                    grid[y + offset_y][x + offset_x] = find_closest_color((r, g, b))
+
+                    offset_x = (grid_size - new_w) // 2
+                    offset_y = (grid_size - new_h) // 2
                 else:  # RGB or other
                     closest_color = find_closest_color(pixel)
                     grid[y][x] = closest_color
